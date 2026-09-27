@@ -94,7 +94,7 @@ def main():
     optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.weight_decay)
 
     os.makedirs(args.out_dir, exist_ok=True)
-    ckpt_path = os.path.join(args.out_dir, f"{args.target}_{args.data}_seed{args.seed}.pt")
+    ckpt_path = os.path.join(args.out_dir, f"{args.model}_{args.target}_{args.data}_seed{args.seed}.pt")
 
     for epoch in range(1, args.epochs + 1):
         encoder.train()
