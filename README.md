@@ -41,7 +41,7 @@ SNN_JEPA/
 ├── scripts/            # 训练/评估入口（阶段 1）
 ├── experiments/        # 运行日志与 checkpoint
 ├── data/               # 数据集
-└── docs/               # 阶段报告、复现计划
+└── docs/               # 阶段报告、复现计划、研究计划（docs/research_plan.md）
 ```
 
 ## 快速开始

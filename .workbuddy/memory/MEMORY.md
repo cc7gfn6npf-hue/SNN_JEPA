@@ -11,6 +11,7 @@
 2. **复现锚点**：图像 JEPA（`facebookresearch/eb_jepa`、`rbalestr-lab/lejepa`）。**SG-JEPA 是动态图论文，仅作引用，不复现。**
 3. **神经数据**：Allen Brain Observatory（allensdk，零审批）先行 → NSD/Algonauts 2023。
 4. **抗坍塌机制排序**：发放率稳态(B) → 突触缩放/去相关(C) → 不应期梯度门控(A)。
+5. **论文定位与增补（2026-09-27）**：首发 CCN/COSYNE，升级 NeurIPS/eLife。三大缺口：能量分析（为什么用SNN）、时间维度（spiking真实性）、novelty硬度。当前主线=生物可塑性规则做硬 + 能量分析 + 多基线/多种子（≥3）；时序主线留作第二篇。详见 `docs/research_plan.md`。
 
 ## 术语锚点
 
@@ -22,3 +23,5 @@
 
 - 脉冲计数嵌入（离散、非负、有界）未必满足 SIGReg 的各向同性高斯假设——这是 H2' 的核心检验点，无论成立与否都是贡献。
 - 静态图像经速率编码后，脉冲特性退化为激活函数，生物合理性论证需在讨论中明确分层。
+- **全零坍塌（SNN 训练经典陷阱）**：LIF 泄漏 + BN 零均值 + 阈值过高 → 放电率过低 → surrogate 梯度消失 → 表征全零。对策：单步模式 + IF 神经元（无泄漏）+ ATan 代理梯度 + 降阈值（0.5）。诊断信号：eff_rank=0、reg 恒等于 variance 最大值。
+- **数据集下载**：torchvision 0.18 的 CIFAR/STL 源在国内超时，需手动下载（旧地址或镜像）到 data 目录。
