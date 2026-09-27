@@ -101,23 +101,29 @@ def jepa_sigreg_loss(
 
 
 def homeostasis_loss(z: torch.Tensor, target_rate: float = 0.25, timesteps: int = 4) -> torch.Tensor:
-    """发放率稳态正则（H2'）：惩罚偏离目标发放率的维度，生物对应突触缩放（synaptic scaling）。
+    """发放率稳态正则（H2'，增强版）：约束发放率的均值与 batch 内分布。
 
-    生物机制：神经元通过突触缩放维持目标发放率——发放率过高则下调输入权重，
-    过低则上调。在嵌入层面等价于约束各维度发放率均匀：既防止维度坍塌（发放率
-    过低→沉默），又防止单维度碾压（发放率过高→过活跃），实现能量均匀化。
+    生物对应突触缩放（synaptic scaling）：神经元将发放率维持在目标区间——
+    过低（沉默）上调突触，过高（过活跃）下调突触。增强版在「均值稳态」基础上
+    增加「方差上下界」：下界防止维度在 batch 内恒定（坍塌），上界防止单维度
+    过活跃（srank=1.0 的能量碾压）。这是脉冲表征（非负有界）下更完整的稳态约束。
 
     与 SIGReg 的关键区别：SIGReg 强制匹配各向同性高斯（含负半部分），但脉冲计数
-    嵌入非负有界，理论上不可能匹配；发放率稳态只约束发放率均匀，契合脉冲表征的
-    物理特性，是更「生物」且更适配 SNN 的抗坍塌机制。
+    嵌入非负有界，理论上不可能匹配；发放率稳态只约束发放率分布（均值 + 上下界），
+    契合脉冲表征的物理特性，是更「生物」且更适配 SNN 的抗坍塌机制。
 
     Args:
         z: 脉冲计数嵌入 [N, D]。
         target_rate: 目标发放率（0~1，相对 T 的比例）。
         timesteps: 时间步数 T。
     """
-    rate = z.mean(dim=0) / timesteps  # [D] 每维平均发放率（0~1）
-    return ((rate - target_rate) ** 2).mean()
+    rate = z / timesteps  # [N, D] 每样本每维发放率（0~1）
+    mean_rate = rate.mean(dim=0)  # [D] batch 平均
+    std_rate = rate.std(dim=0)    # [D] batch 内标准差
+    mean_loss = ((mean_rate - target_rate) ** 2).mean()
+    lower_loss = F.relu(0.05 - std_rate).pow(2).mean()   # 方差下界：防沉默/坍塌
+    upper_loss = F.relu(std_rate - 0.35).pow(2).mean()   # 方差上界：防单维度碾压
+    return mean_loss + lower_loss + upper_loss
 
 
 def jepa_bio_loss(
