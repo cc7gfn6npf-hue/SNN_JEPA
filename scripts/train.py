@@ -47,9 +47,11 @@ def main():
     p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--lambda-std", type=float, default=1.0)
     p.add_argument("--lambda-cov", type=float, default=25.0)
-    p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg"])
+    p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg", "bio"])
     p.add_argument("--lambda-reg", type=float, default=10.0, help="SIGReg 权衡超参")
     p.add_argument("--num-directions", type=int, default=8, help="SIGReg 随机投影方向数")
+    p.add_argument("--lambda-homeo", type=float, default=10.0, help="发放率稳态权重（bio 正则）")
+    p.add_argument("--target-rate", type=float, default=0.25, help="发放率稳态目标发放率（bio 正则）")
     p.add_argument("--mask-ratio", type=float, default=0.75)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--data-dir", default="./data")
@@ -99,6 +101,11 @@ def main():
                 if args.regularizer == "sigreg":
                     loss, pred_loss, reg = losses.jepa_sigreg_loss(
                         z1, z2, pred, args.lambda_reg, args.num_directions
+                    )
+                elif args.regularizer == "bio":
+                    loss, pred_loss, reg = losses.jepa_bio_loss(
+                        z1, z2, pred, args.lambda_homeo, args.lambda_cov,
+                        args.target_rate, args.timesteps,
                     )
                 else:
                     loss, pred_loss, reg = losses.jepa_loss(
