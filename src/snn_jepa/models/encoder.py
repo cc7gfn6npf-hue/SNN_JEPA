@@ -72,17 +72,25 @@ class SpikingEncoder(nn.Module):
         self.fc = nn.Linear(channels[-1], embedding_dim, bias=False)
         self.lif_out = make_neuron()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """前向传播：静态图像 [N, C, H, W] -> 脉冲计数嵌入 [N, embedding_dim]。"""
+    def forward(self, x: torch.Tensor, detach_steps: int = 0) -> torch.Tensor:
+        """前向传播：静态图像 [N, C, H, W] -> 脉冲计数嵌入 [N, embedding_dim]。
+
+        Args:
+            x: 静态图像。
+            detach_steps: 前 N 步梯度阻断（模拟不应期的梯度门控，H4'）。
+                用于 target 编码器替代显式 stop-gradient。
+        """
         functional.reset_net(self)
         out = None
-        for _ in range(self.timesteps):
+        for t in range(self.timesteps):
             xt = x  # 恒定输入（速率编码）
             for block in self.conv_blocks:
                 xt = block(xt)
             xt = xt.mean(dim=[2, 3])  # 全局平均池化 [N, C]
             xt = self.fc(xt)          # [N, D]
             xt = self.lif_out(xt)     # 输出脉冲 [N, D]
+            if t < detach_steps:
+                xt = xt.detach()      # 不应期门控：该时间步梯度阻断
             out = xt if out is None else out + xt
         return out  # 脉冲计数 [N, D]
 

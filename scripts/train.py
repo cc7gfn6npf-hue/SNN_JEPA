@@ -52,6 +52,8 @@ def main():
     p.add_argument("--num-directions", type=int, default=8, help="SIGReg 随机投影方向数")
     p.add_argument("--lambda-homeo", type=float, default=10.0, help="发放率稳态权重（bio 正则）")
     p.add_argument("--target-rate", type=float, default=0.25, help="发放率稳态目标发放率（bio 正则）")
+    p.add_argument("--refractory-steps", type=int, default=-1,
+                   help="不应期梯度门控步数：-1=硬stop-gradient，0=无门控，>0=前N步梯度阻断（H4'）")
     p.add_argument("--mask-ratio", type=float, default=0.75)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--data-dir", default="./data")
@@ -95,8 +97,11 @@ def main():
                 x1, x2 = batch
                 x1, x2 = x1.to(device), x2.to(device)
                 z1 = encoder(x1)
-                with torch.no_grad():
-                    z2 = encoder(x2)
+                if args.refractory_steps < 0:
+                    with torch.no_grad():
+                        z2 = encoder(x2)  # 硬 stop-gradient
+                else:
+                    z2 = encoder(x2, detach_steps=args.refractory_steps)  # 不应期梯度门控
                 pred = head(z1)
                 if args.regularizer == "sigreg":
                     loss, pred_loss, reg = losses.jepa_sigreg_loss(
