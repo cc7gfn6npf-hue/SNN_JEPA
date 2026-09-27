@@ -15,7 +15,7 @@ omegaconf>=2.3.0
 wandb>=0.16.0
 
 # Scientific & metrics
-numpy>=1.24.0
+numpy>=1.24.0,<2.0.0    # <2.0 避免与 spikingjelly 0.0.0.0.14 的 numpy 2.x API 不兼容
 scipy>=1.10.0
 scikit-learn>=1.3.0
 
