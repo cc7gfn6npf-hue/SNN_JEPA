@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snn-jepa"
+version = "0.1.0"
+description = "Spiking JEPA: joint-embedding predictive architecture for biologically-grounded representation learning"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]

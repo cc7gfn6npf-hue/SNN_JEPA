@@ -1,11 +1,10 @@
 # ============================================================
-# Core ML — 已锁定 CUDA 12.1 + PyTorch 2.3.0
-# AutoDL 直接选镜像 pytorch-2.3.0+cu121（已预装，无需手动装 torch）
-# 手动安装时：pip install torch==2.3.0 torchvision==0.18.0 --index-url https://download.pytorch.org/whl/cu121
-# 详见 docs/reproduction_plan.md
+# Core ML — AutoDL 镜像 pytorch-2.3.0+cu121 已预装 torch/torchvision，勿重复安装
+# 仅在手动搭建环境时取消注释：
+# torch==2.3.0
+# torchvision==0.18.0
+# 手动安装：pip install torch==2.3.0 torchvision==0.18.0 --index-url https://download.pytorch.org/whl/cu121
 # ============================================================
-torch==2.3.0
-torchvision==0.18.0
 
 # Spiking neural networks（稳定版，要求 torch>=2.2，测试于 torch 2.7.1）
 spikingjelly==0.0.0.0.14
