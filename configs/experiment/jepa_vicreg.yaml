@@ -1,0 +1,9 @@
+name: jepa_vicreg
+target: jepa
+
+regularizer: vicreg
+lambda_inv: 1.0
+lambda_std: 1.0
+lambda_cov: 100.0
+
+mask_ratio: 0.4

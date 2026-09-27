@@ -1,0 +1,6 @@
+name: stl10
+num_classes: 10
+image_size: 96
+channels: 3
+mean: [0.4467, 0.4398, 0.4066]
+std: [0.2603, 0.2566, 0.2713]

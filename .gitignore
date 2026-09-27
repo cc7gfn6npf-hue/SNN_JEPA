@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Data & artifacts
+data/*
+!data/.gitkeep
+experiments/*
+!experiments/.gitkeep
+
+# WandB & logs
+wandb/
+logs/
+*.log
+outputs/
+multirun/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,28 @@
+# ============================================================
+# Core ML — 先安装与你的 CUDA 匹配的 torch/torchvision
+# 例：CUDA 12.1 → pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# 详见 docs/reproduction_plan.md
+# ============================================================
+torch>=2.1.0
+torchvision>=0.16.0
+
+# Spiking neural networks（版本在确认 CUDA 后锁定）
+spikingjelly
+
+# Configuration & logging
+hydra-core>=1.3.0
+omegaconf>=2.3.0
+wandb>=0.16.0
+
+# Scientific & metrics
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+
+# Utilities
+einops>=0.7.0
+tqdm>=4.66.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.13.0

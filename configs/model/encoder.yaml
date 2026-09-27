@@ -1,0 +1,19 @@
+# 脉冲上下文/目标编码器（阶段 1 实例化）
+architecture: snn_cnn
+
+# 神经元
+neuron_type: PLIF          # LIF | PLIF
+timesteps: 4               # 时间窗口步数
+threshold: 1.0             # 放电阈值
+tau: 2.0                   # 膜时间常数
+surrogate: sigmoid         # 代理梯度函数：sigmoid | atan
+
+# 网络结构
+channels: [32, 64, 128]
+embedding_dim: 512
+readout: spike_count       # spike_count | mean_potential
+
+# 预测器（轻量 MLP）
+predictor:
+  hidden_dims: [256]
+  output_dim: 512

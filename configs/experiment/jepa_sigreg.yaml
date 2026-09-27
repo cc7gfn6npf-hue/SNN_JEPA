@@ -1,0 +1,7 @@
+name: jepa_sigreg
+target: jepa
+
+regularizer: sigreg
+lambda: 10.0               # SIGReg 单一权衡超参数
+
+mask_ratio: 0.4

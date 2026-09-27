@@ -1,0 +1,29 @@
+# Hydra 主配置
+defaults:
+  - _self_
+  - data: cifar10
+  - model: encoder
+  - experiment: jepa_sigreg
+
+# 随机种子（固定以保证可复现）
+seed: 42
+
+# 训练器
+trainer:
+  epochs: 100
+  batch_size: 256
+  lr: 3e-4
+  weight_decay: 1e-4
+  num_workers: 4
+  gradient_clip: 1.0
+
+# 路径
+paths:
+  data_dir: ./data
+  log_dir: ./experiments
+
+# WandB
+wandb:
+  project: snn-jepa
+  entity: null
+  mode: online   # online | offline | disabled
