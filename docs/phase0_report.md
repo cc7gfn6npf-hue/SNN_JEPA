@@ -22,14 +22,14 @@
 
 **进行中 / 待办：**
 
-- [ ] 云 GPU 平台确认与 torch/CUDA 版本锁定
-- [ ] eb_jepa 图像 JEPA 复现（VICReg/SIGReg）
+- [x] 云 GPU 平台（AutoDL）与版本锁定：CUDA 12.1 + PyTorch 2.3.0 + SpikingJelly 0.0.0.0.14
+- [ ] 在 AutoDL 实例上跑通 eb_jepa 图像 JEPA 复现（VICReg/SIGReg）
 - [ ] SNN 编码器 + JEPA 损失兼容性验证
 - [ ] WandB 日志链路与有效秩监控
 
 ## 四、关键决策记录
 
-1. **算力**：云 GPU（CUDA），非本机 Apple Silicon MPS。规模上限解除，训练集可用 STL-10（+ 可选 Tiny-ImageNet 子集）。
+1. **算力**：云 GPU（AutoDL）。版本锁定：CUDA 12.1 + PyTorch 2.3.0（镜像 `pytorch-2.3.0+cu121`）+ SpikingJelly 0.0.0.0.14。本机 Apple Silicon MPS 不适合训练，仅用于开发。规模上限解除，训练集可用 STL-10（+ 可选 Tiny-ImageNet 子集）。
 2. **复现锚点**：图像 JEPA，非 SG-JEPA（动态图论文）。
 3. **神经数据**：Allen Brain Observatory 先行（零审批、即开即用），再上 NSD/Algonauts。
 4. **抗坍塌机制排序**：发放率稳态（B）→ 突触缩放/去相关（C）→ 不应期梯度门控（A），阶段 2 前定夺。
@@ -41,6 +41,6 @@
 
 ## 六、下一步（阶段 0 收尾 → 阶段 1）
 
-1. 确认云 GPU 平台（AutoDL / Colab Pro+ / Lambda / 自有集群）与 CUDA 版本，锁定 torch/spikingjelly 版本。
-2. 在云 GPU 上跑通 0.3/0.4 复现步骤，记录参照指标与有效秩曲线。
+1. 在 AutoDL 创建实例（镜像 `pytorch-2.3.0+cu121`，GPU 3090/A10 24G 起步），克隆本仓库，跑通 0.2 可复现性冒烟测试。
+2. 跑通 0.3/0.4 复现步骤，记录参照指标与有效秩曲线。
 3. 通过退出条件后，进入阶段 1：实现 SNN-MAE 与 SNN-JEPA 基线。

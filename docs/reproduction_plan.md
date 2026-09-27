@@ -12,22 +12,24 @@
 
 ### 0.1 环境安装
 
+**版本锁定（已确认）：CUDA 12.1 + PyTorch 2.3.0 + SpikingJelly 0.0.0.0.14，Python 3.10。**
+
 ```bash
-# 1) 创建环境
-conda env create -f environment.yml
-conda activate snn-jepa
-
-# 2) 安装与 CUDA 匹配的 torch（以 CUDA 12.1 为例，按你的云 GPU 调整）
-pip uninstall -y torch torchvision
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-
-# 3) 其余依赖
+# AutoDL 方式（推荐）：直接选镜像 pytorch-2.3.0+cu121，已预装 torch/torchvision
+# 无需手动装 torch，只装其余依赖：
 pip install -r requirements.txt
 
-# 4) 校验
+# 手动方式（非 AutoDL 镜像时）：
+conda env create -f environment.yml && conda activate snn-jepa
+pip install torch==2.3.0 torchvision==0.18.0 --index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt
+
+# 校验
 python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 python -c "import spikingjelly; print('spikingjelly', spikingjelly.__version__)"
 ```
+
+> 说明：稳定版 SpikingJelly 默认使用纯 torch 后端，无需安装 cupy/triton。若后续阶段 2/3 追求多步神经元训练加速，再评估升级到 torch 2.6+ 开发版（含 triton 后端，官方测试 triton==3.3.1）。
 
 ### 0.2 可复现性冒烟测试
 
