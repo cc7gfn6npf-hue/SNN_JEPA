@@ -9,6 +9,7 @@ import argparse
 import numpy as np
 import torch
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 from torchvision import datasets
 
@@ -70,7 +71,12 @@ def main():
     X_train, y_train = extract(encoder, train_loader, device)
     X_test, y_test = extract(encoder, test_loader, device)
 
-    clf = LogisticRegression(max_iter=1000, C=args.C, n_jobs=-1)
+    # 标准化特征，加速 LogisticRegression 收敛（脉冲计数特征尺度不均）
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    clf = LogisticRegression(max_iter=5000, C=args.C)
     clf.fit(X_train, y_train)
     acc = clf.score(X_test, y_test)
 
