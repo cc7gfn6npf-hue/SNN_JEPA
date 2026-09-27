@@ -47,7 +47,7 @@ def main():
     p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--lambda-std", type=float, default=1.0)
     p.add_argument("--lambda-cov", type=float, default=25.0)
-    p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg", "bio", "rate"])
+    p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg", "bio", "rate", "wsigreg"])
     p.add_argument("--lambda-reg", type=float, default=10.0, help="SIGReg 权衡超参")
     p.add_argument("--num-directions", type=int, default=8, help="SIGReg 随机投影方向数")
     p.add_argument("--lambda-homeo", type=float, default=10.0, help="发放率稳态权重（bio 正则）")
@@ -116,6 +116,10 @@ def main():
                     loss, pred_loss, reg = losses.jepa_rate_loss(
                         z1, z2, pred, args.lambda_reg,
                         args.target_rate, args.timesteps, args.num_directions,
+                    )
+                elif args.regularizer == "wsigreg":
+                    loss, pred_loss, reg = losses.jepa_weak_sigreg_loss(
+                        z1, z2, pred, args.lambda_reg, args.num_directions
                     )
                 else:
                     loss, pred_loss, reg = losses.jepa_loss(

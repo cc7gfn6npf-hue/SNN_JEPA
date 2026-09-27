@@ -191,3 +191,48 @@ def jepa_rate_loss(
     pred_loss = F.mse_loss(pred, z2)
     reg = rate_distribution_loss(z1, num_directions, target_rate, timesteps)
     return pred_loss + lam * reg, pred_loss, reg
+
+
+def weak_sigreg_loss(z: torch.Tensor, num_directions: int = 8) -> torch.Tensor:
+    """弱 SIGReg（二阶矩白化）：约束投影的协方差 = 单位矩阵。
+
+    对应生物的 flashlight 稳态可塑性（颗粒细胞逆行信使），是 SIGReg 的**生物可实现形式**
+    （arXiv:2607.21622 证明其与 STDP⁺ 一起精确实现 SIGReg 梯度，无需反向传播）。
+    只约束二阶矩——投影方差=1（白化）+ 投影间去相关，不要求完整高斯，因此更契合
+    脉冲表征（离散非负有界）。
+
+    关键区别（相比失败的 rate_distribution_loss）：目标方差 = 1（白化），而非
+    发放率的 Binomial 方差 0.047；作用在脉冲计数 z（方差可达 T/4）而非 rate（≤0.25）。
+
+    Args:
+        z: 脉冲计数嵌入 [N, D]。
+        num_directions: 随机投影方向数。
+    """
+    n, d = z.shape
+    zc = z - z.mean(dim=0)
+    u = torch.randn(d, num_directions, device=z.device)
+    u = u / (u.norm(dim=0, keepdim=True) + 1e-8)
+    f = zc @ u  # [N, M] 投影
+
+    var = f.var(dim=0, unbiased=False)  # [M]
+    var_loss = ((var - 1.0) ** 2).mean()  # 白化：各投影方差 = 1
+
+    f_norm = f / (f.std(dim=0, unbiased=False) + 1e-8)
+    corr = (f_norm.t() @ f_norm) / n  # [M, M] 相关矩阵
+    off = corr - torch.diag(torch.diag(corr))
+    cov_loss = (off ** 2).sum() / max(num_directions, 1)  # 去相关
+
+    return var_loss + cov_loss
+
+
+def jepa_weak_sigreg_loss(
+    z1: torch.Tensor,
+    z2: torch.Tensor,
+    pred: torch.Tensor,
+    lam: float,
+    num_directions: int = 8,
+):
+    """JEPA 总损失（弱 SIGReg 版）= 潜空间 L2 预测 + λ·投影协方差白化。"""
+    pred_loss = F.mse_loss(pred, z2)
+    reg = weak_sigreg_loss(z1, num_directions)
+    return pred_loss + lam * reg, pred_loss, reg
