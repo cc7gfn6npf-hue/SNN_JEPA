@@ -143,3 +143,51 @@ def jepa_bio_loss(
     pred_loss = F.mse_loss(pred, z2)
     reg = lambda_homeo * homeostasis_loss(z1, target_rate, timesteps) + lambda_decorr * covariance_loss(z1)
     return pred_loss + reg, pred_loss, reg
+
+
+def rate_distribution_loss(
+    z: torch.Tensor,
+    num_directions: int = 8,
+    target_rate: float = 0.25,
+    timesteps: int = 4,
+) -> torch.Tensor:
+    """发放率分布匹配（H2' 高阶版）：随机投影后，匹配发放率的均值与方差到目标分布。
+
+    对应生物的稳态可塑性维持全体神经元的发放率分布（高阶约束，非仅均值）。
+    关键：约束「各投影方向的方差相等」，直接防止能量集中（srank=1.0）——这是低阶
+    发放率稳态（仅均值/方差区间）做不到的。相比 SIGReg 匹配高斯（含负半部分），本
+    机制匹配非负的发放率分布，契合脉冲表征的非负有界特性，是脉冲域 SIGReg 的生物替代。
+
+    Args:
+        z: 脉冲计数嵌入 [N, D]。
+        num_directions: 随机投影方向数。
+        target_rate: 目标发放率。
+        timesteps: 时间步数 T。
+    """
+    n, d = z.shape
+    rate = z / timesteps  # [N, D] 发放率 ∈ [0,1]
+    # 目标方差：对应 Binomial(T, target_rate) 的自然发放方差
+    target_var = target_rate * (1.0 - target_rate) / timesteps
+    u = torch.randn(d, num_directions, device=z.device)
+    u = u / (u.norm(dim=0, keepdim=True) + 1e-8)
+    proj = rate @ u  # [N, M]
+    total = torch.zeros((), device=z.device)
+    for m in range(num_directions):
+        h = proj[:, m]
+        total = total + (h.mean() - target_rate) ** 2 + (h.var(unbiased=False) - target_var) ** 2
+    return total / num_directions
+
+
+def jepa_rate_loss(
+    z1: torch.Tensor,
+    z2: torch.Tensor,
+    pred: torch.Tensor,
+    lam: float,
+    target_rate: float = 0.25,
+    timesteps: int = 4,
+    num_directions: int = 8,
+):
+    """JEPA 总损失（发放率分布匹配版）= 潜空间 L2 预测 + λ·发放率分布匹配。"""
+    pred_loss = F.mse_loss(pred, z2)
+    reg = rate_distribution_loss(z1, num_directions, target_rate, timesteps)
+    return pred_loss + lam * reg, pred_loss, reg
