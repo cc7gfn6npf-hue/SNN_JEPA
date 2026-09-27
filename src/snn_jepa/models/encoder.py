@@ -40,10 +40,12 @@ class SpikingEncoder(nn.Module):
         neuron_type: str = "IF",
         tau: float = 2.0,
         v_threshold: float = 0.5,
+        readout: str = "spike_count",
     ):
         super().__init__()
         self.timesteps = timesteps
         self.embedding_dim = embedding_dim
+        self.readout = readout  # spike_count（离散脉冲计数）| membrane（连续膜电位）
 
         def make_neuron():
             sf = surrogate.ATan()
@@ -73,15 +75,14 @@ class SpikingEncoder(nn.Module):
         self.lif_out = make_neuron()
 
     def forward(self, x: torch.Tensor, detach_steps: int = 0) -> torch.Tensor:
-        """前向传播：静态图像 [N, C, H, W] -> 脉冲计数嵌入 [N, embedding_dim]。
+        """前向传播：静态图像 [N, C, H, W] -> 嵌入 [N, embedding_dim]。
 
         Args:
             x: 静态图像。
             detach_steps: 前 N 步梯度阻断（模拟不应期的梯度门控，H4'）。
-                用于 target 编码器替代显式 stop-gradient。
         """
         functional.reset_net(self)
-        out = None
+        spike_sum = None
         for t in range(self.timesteps):
             xt = x  # 恒定输入（速率编码）
             for block in self.conv_blocks:
@@ -91,8 +92,11 @@ class SpikingEncoder(nn.Module):
             xt = self.lif_out(xt)     # 输出脉冲 [N, D]
             if t < detach_steps:
                 xt = xt.detach()      # 不应期门控：该时间步梯度阻断
-            out = xt if out is None else out + xt
-        return out  # 脉冲计数 [N, D]
+            if self.readout == "spike_count":
+                spike_sum = xt if spike_sum is None else spike_sum + xt
+        if self.readout == "membrane":
+            return self.lif_out.v     # 膜电位（连续，梯度更平滑）
+        return spike_sum               # 脉冲计数（离散）[N, D]
 
 
 def build_encoder(cfg) -> SpikingEncoder:
@@ -105,4 +109,5 @@ def build_encoder(cfg) -> SpikingEncoder:
         neuron_type=cfg.get("neuron_type", "IF"),
         tau=cfg.get("tau", 2.0),
         v_threshold=cfg.get("threshold", 0.5),
+        readout=cfg.get("readout", "spike_count"),
     )

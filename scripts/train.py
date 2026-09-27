@@ -38,13 +38,14 @@ def main():
     p.add_argument("--target", default="jepa", choices=["jepa", "mae"])
     p.add_argument("--epochs", type=int, default=100)
     p.add_argument("--batch-size", type=int, default=256)
-    p.add_argument("--lr", type=float, default=3e-4)
+    p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--grad-clip", type=float, default=1.0)
     p.add_argument("--embed-dim", type=int, default=512)
     p.add_argument("--timesteps", type=int, default=4)
     p.add_argument("--neuron", default="IF", choices=["IF", "LIF", "PLIF"])
     p.add_argument("--v-threshold", type=float, default=0.5)
+    p.add_argument("--readout", default="spike_count", choices=["spike_count", "membrane"])
     p.add_argument("--lambda-std", type=float, default=1.0)
     p.add_argument("--lambda-cov", type=float, default=25.0)
     p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg", "bio", "rate", "wsigreg"])
@@ -74,6 +75,7 @@ def main():
     encoder = SpikingEncoder(
         in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
         timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
+        readout=args.readout,
     ).to(device)
 
     if args.target == "jepa":
