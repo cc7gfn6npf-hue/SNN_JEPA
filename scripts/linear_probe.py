@@ -35,7 +35,8 @@ def main():
     p.add_argument("--ckpt", required=True, help="训练好的 checkpoint 路径")
     p.add_argument("--embed-dim", type=int, default=512)
     p.add_argument("--timesteps", type=int, default=4)
-    p.add_argument("--neuron", default="PLIF", choices=["PLIF", "LIF"])
+    p.add_argument("--neuron", default="IF", choices=["IF", "LIF", "PLIF"])
+    p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--data-dir", default="./data")
     p.add_argument("--num-workers", type=int, default=4)
@@ -60,7 +61,7 @@ def main():
 
     encoder = SpikingEncoder(
         in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
-        timesteps=args.timesteps, neuron_type=args.neuron,
+        timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
     ).to(device)
     ckpt = torch.load(args.ckpt, map_location=device)
     encoder.load_state_dict(ckpt["encoder"])

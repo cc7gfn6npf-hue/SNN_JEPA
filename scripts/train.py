@@ -43,7 +43,8 @@ def main():
     p.add_argument("--grad-clip", type=float, default=1.0)
     p.add_argument("--embed-dim", type=int, default=512)
     p.add_argument("--timesteps", type=int, default=4)
-    p.add_argument("--neuron", default="PLIF", choices=["PLIF", "LIF"])
+    p.add_argument("--neuron", default="IF", choices=["IF", "LIF", "PLIF"])
+    p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--lambda-std", type=float, default=1.0)
     p.add_argument("--lambda-cov", type=float, default=25.0)
     p.add_argument("--mask-ratio", type=float, default=0.75)
@@ -65,7 +66,7 @@ def main():
 
     encoder = SpikingEncoder(
         in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
-        timesteps=args.timesteps, neuron_type=args.neuron,
+        timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
     ).to(device)
 
     if args.target == "jepa":

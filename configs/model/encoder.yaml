@@ -2,11 +2,11 @@
 architecture: snn_cnn
 
 # 神经元
-neuron_type: PLIF          # LIF | PLIF
+neuron_type: IF            # IF | LIF | PLIF（阶段1默认 IF，阶段2回 LIF/PLIF 做生物机制）
 timesteps: 4               # 时间窗口步数
-threshold: 1.0             # 放电阈值
-tau: 2.0                   # 膜时间常数
-surrogate: sigmoid         # 代理梯度函数：sigmoid | atan
+threshold: 0.5             # 放电阈值（降低以提升初始放电率，避免全零坍塌）
+tau: 2.0                   # 膜时间常数（LIF/PLIF 使用）
+surrogate: atan            # 代理梯度函数：sigmoid | atan
 
 # 网络结构
 channels: [32, 64, 128]
