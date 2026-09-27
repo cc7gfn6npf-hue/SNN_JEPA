@@ -71,6 +71,9 @@ def main():
     X_train, y_train = extract(encoder, train_loader, device)
     X_test, y_test = extract(encoder, test_loader, device)
 
+    # 在标准化前保存原始特征，用于表征质量指标（避免标准化掩盖维度坍塌）
+    Z_raw = torch.from_numpy(X_test)
+
     # 标准化特征，加速 LogisticRegression 收敛（脉冲计数特征尺度不均）
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
@@ -80,9 +83,8 @@ def main():
     clf.fit(X_train, y_train)
     acc = clf.score(X_test, y_test)
 
-    Z = torch.from_numpy(X_test)
     print(f"linear probe accuracy: {acc * 100:.2f}%")
-    print(f"effective rank: {effective_rank(Z):.1f}  |  stable rank: {stable_rank(Z):.1f}")
+    print(f"effective rank: {effective_rank(Z_raw):.1f}  |  stable rank: {stable_rank(Z_raw):.1f}")
     print(f"max rank (min(N, D)): {min(X_test.shape[0], X_test.shape[1])}")
 
 
