@@ -15,6 +15,7 @@ import torch.nn.utils as clip
 
 from snn_jepa import losses
 from snn_jepa.data.datasets import get_dataloaders
+from snn_jepa.models.ann_encoder import ANNEncoder
 from snn_jepa.models.decoder import Decoder
 from snn_jepa.models.encoder import SpikingEncoder
 from snn_jepa.models.predictor import Predictor
@@ -46,6 +47,7 @@ def main():
     p.add_argument("--neuron", default="IF", choices=["IF", "LIF", "PLIF"])
     p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--readout", default="spike_count", choices=["spike_count", "membrane"])
+    p.add_argument("--model", default="snn", choices=["snn", "ann"])
     p.add_argument("--lambda-std", type=float, default=1.0)
     p.add_argument("--lambda-cov", type=float, default=25.0)
     p.add_argument("--regularizer", default="vicreg", choices=["vicreg", "sigreg", "bio", "rate", "wsigreg"])
@@ -72,11 +74,16 @@ def main():
         target=args.target, mask_ratio=args.mask_ratio,
     )
 
-    encoder = SpikingEncoder(
-        in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
-        timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
-        readout=args.readout,
-    ).to(device)
+    if args.model == "ann":
+        encoder = ANNEncoder(
+            in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
+        ).to(device)
+    else:
+        encoder = SpikingEncoder(
+            in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
+            timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
+            readout=args.readout,
+        ).to(device)
 
     if args.target == "jepa":
         head = Predictor(args.embed_dim).to(device)
@@ -99,7 +106,7 @@ def main():
                 x1, x2 = batch
                 x1, x2 = x1.to(device), x2.to(device)
                 z1 = encoder(x1)
-                if args.refractory_steps < 0:
+                if args.model == "ann" or args.refractory_steps < 0:
                     with torch.no_grad():
                         z2 = encoder(x2)  # 硬 stop-gradient
                 else:

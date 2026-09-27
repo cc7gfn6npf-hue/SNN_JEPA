@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 
 from snn_jepa.data.datasets import get_transforms
+from snn_jepa.models.ann_encoder import ANNEncoder
 from snn_jepa.models.encoder import SpikingEncoder
 from snn_jepa.utils.metrics import effective_rank, stable_rank
 from snn_jepa.utils.seed import set_seed
@@ -39,6 +40,7 @@ def main():
     p.add_argument("--neuron", default="IF", choices=["IF", "LIF", "PLIF"])
     p.add_argument("--v-threshold", type=float, default=0.5)
     p.add_argument("--readout", default="spike_count", choices=["spike_count", "membrane"])
+    p.add_argument("--model", default="snn", choices=["snn", "ann"])
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--data-dir", default="./data")
     p.add_argument("--num-workers", type=int, default=4)
@@ -61,11 +63,16 @@ def main():
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
-    encoder = SpikingEncoder(
-        in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
-        timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
-        readout=args.readout,
-    ).to(device)
+    if args.model == "ann":
+        encoder = ANNEncoder(
+            in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
+        ).to(device)
+    else:
+        encoder = SpikingEncoder(
+            in_channels=3, channels=[32, 64, 128], embedding_dim=args.embed_dim,
+            timesteps=args.timesteps, neuron_type=args.neuron, v_threshold=args.v_threshold,
+            readout=args.readout,
+        ).to(device)
     ckpt = torch.load(args.ckpt, map_location=device)
     encoder.load_state_dict(ckpt["encoder"])
     encoder.eval()
