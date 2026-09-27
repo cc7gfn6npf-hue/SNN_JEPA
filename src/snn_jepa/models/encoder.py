@@ -45,7 +45,8 @@ class SpikingEncoder(nn.Module):
         super().__init__()
         self.timesteps = timesteps
         self.embedding_dim = embedding_dim
-        self.readout = readout  # spike_count（离散脉冲计数）| membrane（连续膜电位）
+        self.readout = readout  # spike_count（离散脉冲计数）| membrane（完整膜电位）
+        self.v_threshold = v_threshold
 
         def make_neuron():
             sf = surrogate.ATan()
@@ -92,10 +93,10 @@ class SpikingEncoder(nn.Module):
             xt = self.lif_out(xt)     # 输出脉冲 [N, D]
             if t < detach_steps:
                 xt = xt.detach()      # 不应期门控：该时间步梯度阻断
-            if self.readout == "spike_count":
-                spike_sum = xt if spike_sum is None else spike_sum + xt
+            spike_sum = xt if spike_sum is None else spike_sum + xt
         if self.readout == "membrane":
-            return self.lif_out.v     # 膜电位（连续，梯度更平滑）
+            # 完整膜电位 = 残余膜电位 + 已放电的累积（修复残余解码的信息丢失）
+            return self.lif_out.v + spike_sum * self.v_threshold
         return spike_sum               # 脉冲计数（离散）[N, D]
 
 
